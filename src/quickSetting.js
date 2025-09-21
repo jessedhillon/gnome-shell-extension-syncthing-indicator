@@ -30,6 +30,10 @@ export const SyncthingIndicatorToggle = GObject.registerClass(
         toggleMode: true,
       });
 
+      // TODO: Access to internals of QuickMenuToggle, revisit!
+      this._toggle = this._box.get_child_at_index(0);
+      this._toggle.reactive = extension.settings.get_boolean("use-systemd");
+
       this.extension = extension;
 
       this.menu.box.add_style_class_name("syncthing-indicator");
@@ -37,8 +41,7 @@ export const SyncthingIndicatorToggle = GObject.registerClass(
       this.menu.setHeader(null, _("syncthing"));
 
       // Header action bar section
-      // This is too instrusive in the implementation of the QuickToggleMenu
-      // Find another way to control the header
+      // This is replicating the implementation of the QuickToggleMenu
       // TODO: Revisit
       const actionLayout = new Clutter.GridLayout();
       const actionBar = new St.Widget({
@@ -71,13 +74,15 @@ export const SyncthingIndicatorToggle = GObject.registerClass(
 
       // Toggle action
       this.connect("clicked", () => {
-        if (this.reactive) {
-          this.reactive = false;
+        if (this._toggle.reactive) {
+          this._toggle.reactive = false;
           if (this.checked) {
             this.extension.manager.startService();
           } else {
             this.extension.manager.stopService();
           }
+        } else {
+          this.checked = !this.checked;
         }
       });
 
@@ -93,18 +98,21 @@ export const SyncthingIndicatorToggle = GObject.registerClass(
         (manager, state) => {
           switch (state) {
             case Syncthing.ServiceState.USER_ACTIVE:
-              this.set({ reactive: true, checked: true });
+              this._toggle.reactive = true;
+              this.checked = true;
               break;
             case Syncthing.ServiceState.SYSTEM_ACTIVE:
-              this.set({ reactive: false, checked: true });
+              this._toggle.reactive = false;
+              this.checked = true;
               break;
             case Syncthing.ServiceState.USER_STOPPED:
-              this.set({ reactive: true, checked: false });
+              this._toggle.reactive = true;
+              this.checked = false;
               break;
             case Syncthing.ServiceState.SYSTEM_STOPPED:
-              this.set({ reactive: false });
+              this._toggle.reactive = false;
             case Syncthing.ServiceState.ERROR:
-              this.set({ checked: false });
+              this.checked = false;
               break;
           }
         }
@@ -131,7 +139,8 @@ export const SyncthingIndicatorQuickSetting = GObject.registerClass(
 
       this.panel = new Components.SyncthingPanel(extension, this.toggle.menu);
       this.panel.showAutostartSwitch(
-        extension.settings.get_boolean("auto-start-item")
+        extension.settings.get_boolean("use-systemd") &&
+          extension.settings.get_boolean("auto-start")
       );
       this.panel.icon.addActor(this._addIndicator());
       this.panel.icon.addActor(this.toggle);

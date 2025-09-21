@@ -17,7 +17,12 @@
 			<summary>Settings button</summary>
 			<description>Show extension settings button</description>
 		</key>
-		<key name="auto-start-item" type="b">
+		<key name="use-systemd" type="b">
+			<default>true</default>
+			<summary>Use SystemD</summary>
+			<description>Use SystemD controls</description>
+		</key>
+		<key name="auto-start" type="b">
 			<default>true</default>
 			<summary>Autostart switch</summary>
 			<description>Show extension autostart switch</description>

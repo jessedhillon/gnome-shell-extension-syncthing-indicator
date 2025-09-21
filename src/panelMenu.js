@@ -32,8 +32,7 @@ export const SyncthingIndicatorPanel = GObject.registerClass(
       this.menu.box.add_style_class_name("quick-toggle-menu");
 
       // Header section
-      // This is too instrusive in the implementation of the QuickToggleMenu
-      // Find another way to create the header
+      // This is replicating the implementation of the QuickToggleMenu
       // TODO: Revisit
       const headerLayout = new Clutter.GridLayout();
       this._header = new St.Widget({
@@ -103,9 +102,12 @@ export const SyncthingIndicatorPanel = GObject.registerClass(
       }
 
       this.panel = new Components.SyncthingPanel(extension, this.menu);
-      this.panel.showServiceSwitch(true);
+      this.panel.showServiceSwitch(
+        extension.settings.get_boolean("use-systemd")
+      );
       this.panel.showAutostartSwitch(
-        extension.settings.get_boolean("auto-start-item")
+        extension.settings.get_boolean("use-systemd") &&
+          extension.settings.get_boolean("auto-start")
       );
       this.panel.icon.addActor(this._headerIcon);
       this.add_child(this.panel.icon);

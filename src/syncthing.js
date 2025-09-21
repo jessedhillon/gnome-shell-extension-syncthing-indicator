@@ -25,7 +25,7 @@ const ITEM_STATE_DELAY = 200;
 const RESCHEDULE_EVENT_DELAY = 50;
 const HTTP_ERROR_RETRIES = 3;
 const SYSTEMD_RETRIES = 3;
-const SYSTEMD_RETRY_DELAY = 1000;
+const SYSTEMD_RETRY_DELAY = 2000;
 
 // Error constants
 export const Error = {
@@ -722,16 +722,26 @@ export class Manager extends Utils.Emitter {
   }
 
   async _isServiceActive() {
-    let command = await this._serviceCommand(
+    let active = false;
+    if (this._extensionConfig.useSystemD) {
+      let command = await this._serviceCommand(
         "is-active",
         this._serviceUserMode
-      ),
-      active = command == "active",
-      failed = command == "failed";
-    if (failed) {
-      this._serviceActive = !failed;
-      console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
-      this.emit(Signal.ERROR, { type: Error.DAEMON });
+      );
+      active = command == "active";
+      if (command == "failed") {
+        this._serviceActive = false;
+        console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
+        this.emit(Signal.ERROR, { type: Error.DAEMON });
+      }
+    } else {
+      let result = await this._serviceCall("GET", "/rest/system/ping");
+      active = result["ping"] == "pong" ? "ping" in result : false;
+      if (!active) {
+        this._serviceActive = false;
+        console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
+        this.emit(Signal.ERROR, { type: Error.DAEMON });
+      }
     }
     console.info(
       LOG_PREFIX,
@@ -760,6 +770,8 @@ export class Manager extends Utils.Emitter {
   }
 
   async _isServiceEnabled(user = true) {
+    if (!this._extensionConfig.useSystemD)
+      return (this._serviceUserMode = this._serviceEnabled = false);
     let command = await this._serviceCommand("is-enabled", user),
       enabled = command == "enabled",
       disabled = command == "disabled";
@@ -794,7 +806,7 @@ export class Manager extends Utils.Emitter {
   }
 
   async _serviceCommand(command, user = true) {
-    let args = ["systemctlr", command];
+    let args = ["systemctl", command];
     if (user) {
       args.push(Service.NAME);
       args.push("--user");
@@ -826,7 +838,6 @@ export class Manager extends Utils.Emitter {
           result = "error";
         }
       }
-
       console.debug(
         LOG_PREFIX,
         "calling systemd",
@@ -845,29 +856,31 @@ export class Manager extends Utils.Emitter {
     this._httpSession.abort();
   }
 
+  async _serviceCall(method, path) {
+    return new Promise((resolve, reject) => {
+      try {
+        this._openConnection(method, path, resolve);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
   async _openConnection(method, path, callback) {
     if (await this._extensionConfig.exists()) {
-      console.debug(
-        LOG_PREFIX,
-        "opening connection",
-        method,
-        this._extensionConfig.getURI() + path
-      );
-      let msg = Soup.Message.new(method, this._extensionConfig.getURI() + path);
+      let msg = Soup.Message.new(method, this._extensionConfig.URI + path);
       // Accept self signed certificates (for now)
       msg.connect("accept-certificate", () => {
         return true;
       });
-      msg.request_headers.append(
-        "X-API-Key",
-        this._extensionConfig.getAPIKey()
-      );
+      msg.request_headers.append("X-API-Key", this._extensionConfig.APIKey);
       this._openConnectionMessage(msg, callback);
     }
   }
 
   async _openConnectionMessage(msg, callback) {
-    if ((await this._extensionConfig.exists()) && this._serviceActive) {
+    // if ((await this._extensionConfig.exists()) && this._serviceActive) {
+    if (await this._extensionConfig.exists()) {
       console.debug(
         LOG_PREFIX,
         "opening connection",
@@ -962,14 +975,7 @@ export class Manager extends Utils.Emitter {
     }
   }
 
-  destroy() {
-    this._pollTimer.cancel();
-    this._extensionConfig.destroy();
-    this.folders.destroy();
-    this.devices.destroy();
-  }
-
-  async attach() {
+  async _attach() {
     if (!(await this._extensionConfig.exists())) {
       console.error(LOG_PREFIX, Error.CONFIG);
       this.emit(Signal.SERVICE_CHANGE, ServiceState.ERROR);
@@ -982,6 +988,19 @@ export class Manager extends Utils.Emitter {
         await this._isServiceActive()
       );
     }
+  }
+
+  destroy() {
+    this._pollTimer.cancel();
+    this._extensionConfig.destroy();
+    this.folders.destroy();
+    this.devices.destroy();
+  }
+
+  attach() {
+    this._attach().catch((error) => {
+      console.error(LOG_PREFIX, "attach manager error", error);
+    });
   }
 
   async enableService() {
@@ -1010,7 +1029,7 @@ export class Manager extends Utils.Emitter {
   }
 
   getServiceURI() {
-    return this._extensionConfig.getURI();
+    return this._extensionConfig.URI;
   }
 
   rescan(folder) {

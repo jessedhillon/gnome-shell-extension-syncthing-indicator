@@ -2,7 +2,8 @@
 
 ![screenshot](screenshot.png)
 
-Shell indicator for starting, monitoring and controlling the Syncthing daemon using SystemD
+Shell indicator for monitoring and controlling Syncthing.
+If you use SystemD it will add the ability to (auto) start and stop the service.
 
 What is [Syncthing](https://syncthing.net/)?
 
