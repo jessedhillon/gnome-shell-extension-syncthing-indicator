@@ -1,5 +1,5 @@
 /* =============================================================================================================
-	SyncthingIndicator 0.46
+	SyncthingIndicator 0.47
 ================================================================================================================
 
 	GJS syncthing gnome-shell panel indicator signalling the Syncthing deamon status.
@@ -12,8 +12,8 @@ import GLib from "gi://GLib";
 
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import {
-    Extension,
-    gettext as _,
+  Extension,
+  gettext as _,
 } from "resource:///org/gnome/shell/extensions/extension.js";
 
 import * as Syncthing from "./syncthing.js";
@@ -26,47 +26,43 @@ const SETTINGS_DELAY = 500;
 
 // Syncthing indicator extension
 export default class SyncthingIndicatorExtension extends Extension {
-    // Syncthing indicator enabler
-    enable() {
-        this._settingTimer = new Utils.Timer(SETTINGS_DELAY);
-        this.settings = this.getSettings();
-        this.settings.connect("changed", () => {
-            this._settingTimer.run(() => {
-                this.indicator.close();
-                this.disable();
-                this.enable();
-            });
-        });
-        this.manager = new Syncthing.Manager(
-            new Config(this.settings, false),
-            this.metadata.path
+  // Syncthing indicator enabler
+  enable() {
+    this._settingTimer = new Utils.Timer(SETTINGS_DELAY);
+    this.settings = this.getSettings();
+    this.settings.connect("changed", () => {
+      this._settingTimer.run(() => {
+        this.indicator.close();
+        this.disable();
+        this.enable();
+      });
+    });
+    this.manager = new Syncthing.Manager(
+      new Config(this.settings, false),
+      this.metadata.path
+    );
+    switch (this.settings.get_int("menu")) {
+      case 0:
+        this.indicator = new QuickSetting.SyncthingIndicatorQuickSetting(this);
+        Main.panel.statusArea.quickSettings.addExternalIndicator(
+          this.indicator
         );
-        switch (this.settings.get_int("menu")) {
-            case 0:
-                this.indicator =
-                    new QuickSetting.SyncthingIndicatorQuickSetting(this);
-                Main.panel.statusArea.quickSettings.addExternalIndicator(
-                    this.indicator
-                );
-                break;
-            case 1:
-                this.indicator = new PanelMenu.SyncthingIndicatorPanel(this);
-                Main.panel.addToStatusArea(
-                    "SyncthingIndicatorPanel",
-                    this.indicator
-                );
-                break;
-        }
-        this.manager.attach();
+        break;
+      case 1:
+        this.indicator = new PanelMenu.SyncthingIndicatorPanel(this);
+        Main.panel.addToStatusArea("SyncthingIndicatorPanel", this.indicator);
+        break;
     }
+    this.manager.attach();
+  }
 
-    // Syncthing indicator disabler
-    disable() {
-        this._settingTimer.cancel();
-        this.settings = null;
-        this.indicator.destroy();
-        this.indicator = null;
-        this.manager.destroy();
-        this.manager = null;
-    }
+  // Syncthing indicator disabler
+  disable() {
+    this._settingTimer.cancel();
+    this.settings = null;
+    this.indicator.destroy();
+    this.indicator = null;
+    this.manager.destroy();
+    this.manager = null;
+  }
 }
