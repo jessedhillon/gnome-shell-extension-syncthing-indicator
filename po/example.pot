@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-21 17:24+0200\n"
+"POT-Creation-Date: 2025-09-22 22:21+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,71 +17,71 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/components.js:129
+#: src/components.js:126
 msgid "unknown-error"
 msgstr ""
 
-#: src/components.js:132
+#: src/components.js:129
 msgid "daemon-error"
 msgstr ""
 
-#: src/components.js:135
+#: src/components.js:132
 msgid "service-error"
 msgstr ""
 
-#: src/components.js:138
+#: src/components.js:135
 msgid "decoding-error"
 msgstr ""
 
-#: src/components.js:141
+#: src/components.js:138
 msgid "connection-error"
 msgstr ""
 
-#: src/components.js:144
+#: src/components.js:141
 msgid "config-error"
 msgstr ""
 
-#: src/components.js:148 src/prefs.js:268
+#: src/components.js:144 src/prefs.js:259
 msgid "syncthing-indicator"
 msgstr ""
 
-#: src/components.js:226
+#: src/components.js:219
 msgid "folders"
 msgstr ""
 
-#: src/components.js:330
+#: src/components.js:314
 msgid "this-device"
 msgstr ""
 
-#: src/components.js:493
+#: src/components.js:469
 msgid "devices"
 msgstr ""
 
-#: src/components.js:515
+#: src/components.js:491
 msgid "not-connected"
 msgstr ""
 
-#: src/components.js:542
+#: src/components.js:518
 msgid "service"
 msgstr ""
 
-#: src/components.js:603
+#: src/components.js:576
 msgid "autostart"
 msgstr ""
 
-#: src/components.js:654
+#: src/components.js:627
 msgid "rescan"
 msgstr ""
 
-#: src/components.js:690
+#: src/components.js:663
 msgid "web-interface"
 msgstr ""
 
-#: src/components.js:729
+#: src/components.js:702
 msgid "settings"
 msgstr ""
 
-#: src/panelMenu.js:74 src/quickSetting.js:29 src/quickSetting.js:37
+#: src/panelMenu.js:73 src/quickSetting.js:29 src/quickSetting.js:41
 msgid "syncthing"
 msgstr ""
 
@@ -109,79 +109,79 @@ msgstr ""
 msgid "menu-type-subtitle"
 msgstr ""
 
-#: src/prefs.js:87
+#: src/prefs.js:82
 msgid "icon-state-title"
 msgstr ""
 
-#: src/prefs.js:88
+#: src/prefs.js:83
 msgid "icon-state-subtitle"
 msgstr ""
 
-#: src/prefs.js:100
+#: src/prefs.js:95
 msgid "setting-button-title"
 msgstr ""
 
-#: src/prefs.js:101
+#: src/prefs.js:96
 msgid "setting-button-subtitle"
 msgstr ""
 
-#: src/prefs.js:113
+#: src/prefs.js:108
 msgid "use-sysd-item"
 msgstr ""
 
-#: src/prefs.js:114
+#: src/prefs.js:109
 msgid "use-sysd-item-subtitle"
 msgstr ""
 
-#: src/prefs.js:126
+#: src/prefs.js:121
 msgid "auto-start-item"
 msgstr ""
 
-#: src/prefs.js:127
+#: src/prefs.js:122
 msgid "auto-start-item-subtitle"
 msgstr ""
 
-#: src/prefs.js:145
+#: src/prefs.js:140
 msgid "auto-config-group-title"
 msgstr ""
 
-#: src/prefs.js:146
+#: src/prefs.js:141
 msgid "auto-config-group-description"
 msgstr ""
 
-#: src/prefs.js:152
+#: src/prefs.js:147
 msgid "auto-config-title"
 msgstr ""
 
-#: src/prefs.js:153
+#: src/prefs.js:148
 msgid "auto-config-subtitle"
 msgstr ""
 
-#: src/prefs.js:165
+#: src/prefs.js:160
 msgid "config-file-title"
 msgstr ""
 
-#: src/prefs.js:166 src/prefs.js:179 src/prefs.js:192 src/prefs.js:209
-#: src/prefs.js:211 src/prefs.js:215
+#: src/prefs.js:161 src/prefs.js:174 src/prefs.js:187 src/prefs.js:202
+#: src/prefs.js:204 src/prefs.js:206
 msgid "unknown"
 msgstr ""
 
-#: src/prefs.js:178 src/prefs.js:223
+#: src/prefs.js:173 src/prefs.js:214
 msgid "service-uri-title"
 msgstr ""
 
-#: src/prefs.js:191 src/prefs.js:243
+#: src/prefs.js:186 src/prefs.js:234
 msgid "api-key-title"
 msgstr ""
 
-#: src/prefs.js:224
+#: src/prefs.js:215
 msgid "service-uri-tooltip"
 msgstr ""
 
-#: src/prefs.js:244
+#: src/prefs.js:235
 msgid "api-key-tooltip"
 msgstr ""
 
-#: src/prefs.js:274
+#: src/prefs.js:265
 msgid "copyright"
 msgstr ""
