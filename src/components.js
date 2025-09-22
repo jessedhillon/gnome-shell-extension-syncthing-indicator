@@ -141,7 +141,6 @@ export class SyncthingPanel {
           errorText = _("config-error");
           break;
       }
-      console.error(LOG_PREFIX, errorText, error);
       Main.notifyError(_("syncthing-indicator"), errorText);
     });
   }
