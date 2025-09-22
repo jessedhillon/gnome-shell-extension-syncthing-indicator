@@ -24,7 +24,7 @@ const DEVICE_STATE_DELAY = 600;
 const ITEM_STATE_DELAY = 200;
 const RESCHEDULE_EVENT_DELAY = 50;
 const HTTP_ERROR_RETRIES = 3;
-const SYSTEMD_COMMAND = "systemctlr";
+const SYSTEMD_COMMAND = "systemctl";
 const SYSTEMD_RETRIES = 3;
 const SYSTEMD_RETRY_DELAY = 2000;
 
