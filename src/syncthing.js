@@ -16,7 +16,7 @@ import * as Utils from "./utils.js";
 
 const LOG_PREFIX = "syncthing-indicator-manager:";
 const POLL_TIME = 20000;
-const START_DELAY_TIME = 1000;
+const POLL_DELAY_TIME = 1000;
 const POLL_CONNECTION_HOOK_COUNT = 6; // Poll time * count =  every 2 minutes
 const POLL_CONFIG_HOOK_COUNT = 45; // Poll time * count =  every 15 minutes
 const CONNECTION_RETRY_DELAY = 1000;
@@ -835,11 +835,6 @@ export class Manager extends Utils.Emitter {
     return result;
   }
 
-  _abortConnections() {
-    this._httpAborting = true;
-    this._httpSession.abort();
-  }
-
   async _serviceCall(method, path) {
     return new Promise((resolve, reject) => {
       try {
@@ -870,7 +865,6 @@ export class Manager extends Utils.Emitter {
         "opening connection",
         msg.method + ":" + msg.uri.get_path()
       );
-      this._httpAborting = false;
       this._httpSession.send_and_read_async(
         msg,
         GLib.PRIORITY_DEFAULT,
@@ -1001,15 +995,16 @@ export class Manager extends Utils.Emitter {
   async startService() {
     this._setService();
     await this._serviceCommand("start");
-    Utils.Timer.run(START_DELAY_TIME, () => {
-      this._isServiceActive();
-    });
+    await Utils.sleep(POLL_DELAY_TIME);
+    this._isServiceActive();
   }
 
   async stopService() {
-    this._abortConnections();
+    this._httpAborting = true;
+    this._httpSession.abort();
     await this._serviceCommand("stop");
     this._isServiceActive();
+    this._httpAborting = false;
   }
 
   getServiceURI() {
