@@ -24,6 +24,7 @@ const DEVICE_STATE_DELAY = 600;
 const ITEM_STATE_DELAY = 200;
 const RESCHEDULE_EVENT_DELAY = 50;
 const HTTP_ERROR_RETRIES = 3;
+const SYSTEMD_COMMAND = "systemctlr";
 const SYSTEMD_RETRIES = 3;
 const SYSTEMD_RETRY_DELAY = 2000;
 
@@ -723,6 +724,7 @@ export class Manager extends Utils.Emitter {
 
   async _isServiceActive() {
     let active = false;
+    let command = "api";
     if (this._extensionConfig.useSystemD) {
       let command = await this._serviceCommand(
         "is-active",
@@ -734,7 +736,15 @@ export class Manager extends Utils.Emitter {
         console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
         this.emit(Signal.ERROR, { type: Error.DAEMON });
       }
-    } else {
+      this._extensionConfig.useSystemD = command == "error";
+      if (!this._extensionConfig.useSystemD) {
+        console.warn(
+          LOG_PREFIX,
+          "systemd call failed, switching to API only mode"
+        );
+      }
+    }
+    if (!this._extensionConfig.useSystemD) {
       let result = await this._serviceCall("GET", "/rest/system/ping");
       active = result["ping"] == "pong" ? "ping" in result : false;
       if (!active) {
@@ -746,8 +756,8 @@ export class Manager extends Utils.Emitter {
     console.info(
       LOG_PREFIX,
       "service active",
+      command,
       this._serviceUserMode,
-      active,
       this._serviceActive
     );
     if (active != this._serviceActive) {
@@ -773,19 +783,17 @@ export class Manager extends Utils.Emitter {
     if (!this._extensionConfig.useSystemD)
       return (this._serviceUserMode = this._serviceEnabled = false);
     let command = await this._serviceCommand("is-enabled", user),
-      enabled = command == "enabled",
-      disabled = command == "disabled";
+      enabled = command == "enabled";
     if (!enabled && user) {
       return await this._isServiceEnabled(false);
     }
     console.debug(
       LOG_PREFIX,
       "service enabled",
+      command,
       user,
       this._serviceUserMode,
-      enabled,
-      this._serviceEnabled,
-      disabled
+      this._serviceEnabled
     );
     if (enabled != this._serviceEnabled) {
       this._serviceUserMode = user;
@@ -806,7 +814,7 @@ export class Manager extends Utils.Emitter {
   }
 
   async _serviceCommand(command, user = true) {
-    let args = ["systemctl", command];
+    let args = [SYSTEMD_COMMAND, command];
     if (user) {
       args.push(Service.NAME);
       args.push("--user");
@@ -814,7 +822,6 @@ export class Manager extends Utils.Emitter {
       args.push(Service.NAME + "@" + GLib.get_user_name());
     }
     let result;
-
     for (let i = 1; i < SYSTEMD_RETRIES; i++) {
       try {
         let proc = Gio.Subprocess.new(args, Gio.SubprocessFlags.STDOUT_PIPE);

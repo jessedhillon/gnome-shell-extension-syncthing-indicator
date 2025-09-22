@@ -15,6 +15,7 @@ Gio._promisify(Gio.Subprocess.prototype, "communicate_utf8_async");
 import GLib from "gi://GLib";
 
 const LOG_PREFIX = "syncthing-indicator-config:";
+const SYNCTHING_COMMAND = "syncthing";
 
 // Synthing configuration
 export default class Config {
@@ -57,7 +58,7 @@ export default class Config {
     // Extract syncthing config file location from the synthing path command
     try {
       let proc = Gio.Subprocess.new(
-        ["syncthing", "--paths"],
+        [SYNCTHING_COMMAND, "--paths"],
         Gio.SubprocessFlags.STDOUT_PIPE
       );
       let pathArray = (await proc.communicate_utf8_async(null, null))
@@ -168,6 +169,10 @@ export default class Config {
     } else {
       return this.prefURI;
     }
+  }
+
+  set useSystemD(value) {
+    return this.settings.set_boolean("use-systemd", value);
   }
 
   get useSystemD() {
