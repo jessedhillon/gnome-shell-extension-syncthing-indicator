@@ -723,35 +723,32 @@ export class Manager extends Utils.Emitter {
   }
 
   async _isServiceActive() {
-    let active = false;
-    let command = "api";
+    let active = false,
+      error = false,
+      command = "api";
     if (this._extensionConfig.useSystemD) {
       let command = await this._serviceCommand(
         "is-active",
         this._serviceUserMode
       );
       active = command == "active";
-      if (command == "failed") {
-        this._serviceActive = false;
-        console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
-        this.emit(Signal.ERROR, { type: Error.DAEMON });
-      }
-      this._extensionConfig.useSystemD = command == "error";
-      if (!this._extensionConfig.useSystemD) {
+      error = command == "failed" || command == "error";
+      if (error) {
         console.warn(
           LOG_PREFIX,
           "systemd call failed, switching to API only mode"
         );
+        this._extensionConfig.useSystemD = !error;
       }
     }
     if (!this._extensionConfig.useSystemD) {
       let result = await this._serviceCall("GET", "/rest/system/ping");
       active = result["ping"] == "pong" ? "ping" in result : false;
-      if (!active) {
-        this._serviceActive = false;
-        console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
-        this.emit(Signal.ERROR, { type: Error.DAEMON });
-      }
+      error = !active ? active : error;
+    }
+    if (error) {
+      console.error(LOG_PREFIX, Error.DAEMON, Service.NAME);
+      this.emit(Signal.ERROR, { type: Error.DAEMON });
     }
     console.info(
       LOG_PREFIX,
@@ -822,7 +819,8 @@ export class Manager extends Utils.Emitter {
       args.push(Service.NAME + "@" + GLib.get_user_name());
     }
     let result;
-    for (let i = 1; i < SYSTEMD_RETRIES; i++) {
+    for (let i = 1; i <= SYSTEMD_RETRIES; i++) {
+      console.debug(LOG_PREFIX, "calling systemd", user, args.toString());
       try {
         let proc = Gio.Subprocess.new(args, Gio.SubprocessFlags.STDOUT_PIPE);
         result = (await proc.communicate_utf8_async(null, null))
@@ -830,31 +828,10 @@ export class Manager extends Utils.Emitter {
           .replace(/[^a-z].?/, "");
         break;
       } catch (error) {
-        if (i < SYSTEMD_RETRIES) {
-          await Utils.sleep(SYSTEMD_RETRY_DELAY);
-        } else {
-          console.error(
-            LOG_PREFIX,
-            "calling systemd",
-            command,
-            user,
-            args.toString(),
-            error
-          );
-          this.emit(Signal.ERROR, { type: Error.DAEMON });
-          result = "error";
-        }
+        result = "error";
+        await Utils.sleep(SYSTEMD_RETRY_DELAY);
       }
-      console.debug(
-        LOG_PREFIX,
-        "calling systemd",
-        command,
-        user,
-        args.toString(),
-        result
-      );
     }
-
     return result;
   }
 
