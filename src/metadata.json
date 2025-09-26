@@ -1,5 +1,5 @@
 {
-  "description": "Shell indicator for starting, monitoring and controlling the Syncthing daemon using SystemD",
+  "description": "Shell indicator for monitoring and controlling Syncthing. Using SystemD will add the ability to (auto) start and stop the service.",
   "name": "Syncthing Indicator",
   "shell-version": ["47", "48", "49"],
   "url": "https://github.com/2nv2u/gnome-shell-extension-syncthing-indicator",
