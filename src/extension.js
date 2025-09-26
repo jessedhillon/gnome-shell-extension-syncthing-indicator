@@ -1,5 +1,5 @@
 /* =============================================================================================================
-	SyncthingIndicator 0.47
+	SyncthingIndicator 0.48
 ================================================================================================================
 
 	GJS syncthing gnome-shell panel indicator signalling the Syncthing deamon status.
@@ -58,7 +58,7 @@ export default class SyncthingIndicatorExtension extends Extension {
 
   // Syncthing indicator disabler
   disable() {
-    this._settingTimer.cancel();
+    Utils.Timer.destroy();
     this.settings = null;
     this.indicator.destroy();
     this.indicator = null;

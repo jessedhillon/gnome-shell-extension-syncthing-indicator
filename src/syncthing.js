@@ -1,5 +1,5 @@
 /* =============================================================================================================
-	SyncthingManager 0.47
+	SyncthingManager 0.48
 ================================================================================================================
 
 	GJS syncthing (systemd) manager.
@@ -16,7 +16,7 @@ import * as Utils from "./utils.js";
 
 const LOG_PREFIX = "syncthing-indicator-manager:";
 const POLL_TIME = 20000;
-const POLL_DELAY_TIME = 1000;
+const POLL_DELAY_TIME = 2000;
 const POLL_CONNECTION_HOOK_COUNT = 6; // Poll time * count =  every 2 minutes
 const POLL_CONFIG_HOOK_COUNT = 45; // Poll time * count =  every 15 minutes
 const CONNECTION_RETRY_DELAY = 1000;
@@ -173,7 +173,7 @@ class Item extends Utils.Emitter {
   }
 
   destroy() {
-    this._stateTimer.cancel();
+    this._stateTimer.destroy();
     this.emit(Signal.DESTROY);
   }
 }
@@ -276,7 +276,7 @@ class Device extends Item {
   }
 
   destroy() {
-    this._determineTimer.cancel();
+    this._determineTimer.destroy();
     super.destroy();
   }
 }
@@ -969,7 +969,7 @@ export class Manager extends Utils.Emitter {
   }
 
   destroy() {
-    this._pollTimer.cancel();
+    this._pollTimer.destroy();
     this._extensionConfig.destroy();
     this.folders.destroy();
     this.devices.destroy();

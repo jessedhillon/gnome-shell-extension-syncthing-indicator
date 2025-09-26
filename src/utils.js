@@ -1,5 +1,5 @@
 /* =============================================================================================================
-	SyncthingManager 0.47
+	SyncthingManager 0.48
 ================================================================================================================
 
 	GJS utils.
@@ -12,11 +12,27 @@ import GLib from "gi://GLib";
 const Signals = imports.signals;
 
 export class Timer {
+  static _timers = new Set();
+
+  static run(
+    timeout,
+    callback,
+    recurring = false,
+    priority = GLib.PRIORITY_DEFAULT
+  ) {
+    return new Timer(timeout, recurring, priority).run(callback);
+  }
+
+  static destroy() {
+    for (let timer of Timer._timers) timer.destroy();
+  }
+
   constructor(
     timeout,
     recurring = false,
     priority = GLib.PRIORITY_DEFAULT_IDLE
   ) {
+    Timer._timers.add(this);
     this._timeout = timeout;
     this._recurring = recurring;
     this._priority = priority;
@@ -55,36 +71,15 @@ export class Timer {
     }
   }
 
-  static run(
-    timeout,
-    callback,
-    recurring = false,
-    priority = GLib.PRIORITY_DEFAULT
-  ) {
-    return new Timer(timeout, recurring, priority).run(callback);
+  destroy() {
+    Timer._timers.delete(this);
+    this.cancel();
   }
+}
+
+export function sleep(ms) {
+  return new Promise((resolve) => Timer.run(ms, resolve));
 }
 
 export class Emitter {}
 Signals.addSignalMethods(Emitter.prototype);
-
-export function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// TODO: Move to async/await for HTTP connections
-// return new Promise((resolve, reject) => {
-//   session.queue_message(message, () => {
-//     try {
-//       if (message.status_code === Soup.KnownStatusCode.OK) {
-//         let result = JSON.parse(message.response_body.data);
-
-//         resolve(result);
-//       } else {
-//         reject(new Error(message.status_code.toString()));
-//       }
-//     } catch (e) {
-//       reject(e);
-//     }
-//   });
-// });
