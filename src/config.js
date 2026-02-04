@@ -58,7 +58,7 @@ export default class Config {
     // Extract syncthing config file location from the synthing path command
     try {
       let proc = Gio.Subprocess.new(
-        [SYNCTHING_COMMAND, "--paths"],
+        [SYNCTHING_COMMAND, "paths"],
         Gio.SubprocessFlags.STDOUT_PIPE
       );
       let pathArray = (await proc.communicate_utf8_async(null, null))

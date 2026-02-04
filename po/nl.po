@@ -135,7 +135,7 @@ msgstr "Auto &amp; handmatige configuratie"
 
 #: src/prefs.js:141
 msgid "auto-config-group-description"
-msgstr "De connectie zal uit de de config worden gehaald doormiddel van het commando 'syncthing --paths' of het zal worden opgezocht uit de standaard locaties.\nAls dit mislukt kun je de API key en URI zelf wijzigen."
+msgstr "De connectie zal uit de de config worden gehaald doormiddel van het commando 'syncthing paths' of het zal worden opgezocht uit de standaard locaties.\nAls dit mislukt kun je de API key en URI zelf wijzigen."
 
 #: src/prefs.js:147
 msgid "auto-config-title"

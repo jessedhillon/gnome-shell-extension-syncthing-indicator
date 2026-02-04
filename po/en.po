@@ -136,7 +136,7 @@ msgstr "Auto &amp; manual configuration"
 
 #: src/prefs.js:141
 msgid "auto-config-group-description"
-msgstr "The connection will be extracted from the config by parsing the command 'syncthing --paths' or it will be searched in the default locations.\nIf this fails you can change the API key and URI yourself."
+msgstr "The connection will be extracted from the config by parsing the command 'syncthing paths' or it will be searched in the default locations.\nIf this fails you can change the API key and URI yourself."
 
 #: src/prefs.js:147
 msgid "auto-config-title"
