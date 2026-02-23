@@ -19,6 +19,7 @@ const POLL_TIME = 20000;
 const POLL_DELAY_TIME = 2000;
 const POLL_CONNECTION_HOOK_COUNT = 6; // Poll time * count =  every 2 minutes
 const POLL_CONFIG_HOOK_COUNT = 45; // Poll time * count =  every 15 minutes
+const CONNECTION_TIMEOUT_RETRIES = 3;
 const CONNECTION_RETRY_DELAY = 1000;
 const DEVICE_STATE_DELAY = 600;
 const ITEM_STATE_DELAY = 200;
@@ -378,6 +379,8 @@ export class Manager extends Utils.Emitter {
     this._serviceActive = false;
     this._serviceEnabled = false;
     this._serviceUserMode = true;
+    this._eventLoopActive = false;
+    this._eventTimer = null;
     this._pollTimer = new Utils.Timer(POLL_TIME, true);
     this._pollCount = 1; // Start at 1 to stop from cycling the hooks at init
     this._lastEventID = 1;
@@ -391,12 +394,14 @@ export class Manager extends Utils.Emitter {
             this._hostID = status.myID;
             this._callConfig((config) => {
               this._callEvents("limit=1");
+              this._eventLoopActive = true;
               this._pollTimer.run(this._pollState.bind(this));
             });
           });
           break;
         case ServiceState.USER_STOPPED:
         case ServiceState.SYSTEM_STOPPED:
+        case ServiceState.ERROR:
           this.destroy();
           this._lastEventID = 1;
           this._httpErrorCount = 0;
@@ -519,9 +524,13 @@ export class Manager extends Utils.Emitter {
         }
       }
       // Reschedule this event stream
-      Utils.Timer.run(RESCHEDULE_EVENT_DELAY, () => {
-        this._callEvents("since=" + this._lastEventID);
-      });
+      if (this._eventLoopActive && this._serviceConnected) {
+        this._eventTimer = Utils.Timer.run(RESCHEDULE_EVENT_DELAY, () => {
+          this._callEvents("since=" + this._lastEventID);
+        });
+      } else {
+        console.debug(LOG_PREFIX, "event loop stopped, not rescheduling");
+      }
     });
   }
 
@@ -857,8 +866,8 @@ export class Manager extends Utils.Emitter {
     }
   }
 
-  async _openConnectionMessage(msg, callback) {
-    // if ((await this._extensionConfig.exists()) && this._serviceActive) {
+  async _openConnectionMessage(msg, callback, timeoutRetryCount = 0) {
+    // Track retry count for timeout errors
     if (await this._extensionConfig.exists()) {
       console.debug(
         LOG_PREFIX,
@@ -880,16 +889,22 @@ export class Manager extends Utils.Emitter {
               );
             } catch (error) {
               if (error.code == Gio.IOErrorEnum.TIMED_OUT) {
-                console.info(
-                  LOG_PREFIX,
-                  error.message,
-                  "will retry",
-                  msg.method + ":" + msg.uri.get_path()
-                );
-                // Retry this connection attempt
-                Utils.Timer.run(CONNECTION_RETRY_DELAY, () => {
-                  this._openConnectionMessage(msg, callback);
-                });
+                timeoutRetryCount++;
+                if (timeoutRetryCount <= CONNECTION_TIMEOUT_RETRIES) {
+                  console.info(
+                    LOG_PREFIX,
+                    error.message,
+                    "will retry",
+                    timeoutRetryCount + "/" + CONNECTION_TIMEOUT_RETRIES,
+                    msg.method + ":" + msg.uri.get_path()
+                  );
+                  // Retry this connection attempt
+                  Utils.Timer.run(CONNECTION_RETRY_DELAY, () => {
+                    this._openConnectionMessage(msg, callback, timeoutRetryCount);
+                  });
+                } else {
+                  console.warn(LOG_PREFIX, "max timeout retries reached", msg.method + ":" + msg.uri.get_path());
+                }
               }
             }
             try {
@@ -970,6 +985,10 @@ export class Manager extends Utils.Emitter {
 
   destroy() {
     this._pollTimer.destroy();
+    this._eventLoopActive = false;
+    if (this._eventTimer) {
+      this._eventTimer.destroy();
+    }
     this._extensionConfig.destroy();
     this.folders.destroy();
     this.devices.destroy();
